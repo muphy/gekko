@@ -45,3 +45,5 @@ TMP_*
 .idea
 volumes
 SECRET-api-keys.json
+
+docs/private/*

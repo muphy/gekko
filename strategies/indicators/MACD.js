@@ -1,5 +1,6 @@
 // required indicators
 var EMA = require('./EMA.js');
+var log = require('../../core/log.js');
 
 var Indicator = function(config) {
   this.diff = false;
@@ -14,6 +15,7 @@ Indicator.prototype.update = function(price) {
   this.calculateEMAdiff();
   this.signal.update(this.diff);
   this.result = this.diff - this.signal.result;
+  log.debug('MACD indicator update:',this.result);
 }
 
 Indicator.prototype.calculateEMAdiff = function() {

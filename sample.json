@@ -1,0 +1,18 @@
+{
+  "candle_duration": 30,
+  "waiting": 90,
+  "buy": {
+    "condition": {
+      "case1": {
+        "prev_candle_count": 3,
+        "prev_volume_surge_ratio": 3,
+        "prev_price_surge_ratio": 1.01
+      },
+      "case2": {
+        "prev_candle_count": 3,
+        "prev_volume_surge_ratio": 5,
+        "prev_max_num_candle": 10
+      }
+    }
+  }
+}

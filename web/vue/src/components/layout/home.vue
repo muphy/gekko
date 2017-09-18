@@ -4,7 +4,7 @@
     .grd-row-col-3-6.txt--center
       img(src='/assets/gekko.jpg')
       p
-        em The most valuable commodity I know of is information.
+        em The most valuable commodity I know of is information!!!!!.
 </template>
 
 <script>
