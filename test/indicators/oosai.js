@@ -9,8 +9,7 @@ var util = require('../../core/util');
 var dirs = util.dirs();
 var INDICATOR_PATH = dirs.indicators;
 var settings = {
-  "candle_duration": 30,
-  "waiting": 90,
+  "candle_duration": 5,
   "buy": {
     "condition": {
       "case1": {
@@ -229,22 +228,22 @@ var candles = [{
   },
   {
     "start": moment("2015-02-15T00:05:00.000Z"),
-    "open": 257.38,
-    "high": 257.45,
-    "low": 257.38,
-    "close": 257.45,
+    "open": 281.38,
+    "high": 265.45,
+    "low": 245.38,
+    "close": 260.45,
     "vwp": 257.3975644932184,
-    "volume": 7.97062564,
+    "volume": 29,
     "trades": 4
   },
   {
     "start": moment("2015-02-15T00:06:00.000Z"),
-    "open": 257.46,
-    "high": 257.48,
+    "open": 260.46,
+    "high": 277.48,
     "low": 257.46,
-    "close": 257.48,
+    "close": 265.48,
     "vwp": 257.47333333333336,
-    "volume": 7.5,
+    "volume": 17,
     "trades": 4
   }
 ];
@@ -256,14 +255,14 @@ describe('indicators/OOSAI', function () {
   it('should correctly set up with settings', function () {
     var oosai = new OOSAI(settings);
     expect(oosai.settings_candle_duration).to.equal(settings.candle_duration);
-    expect(oosai.settings_candle_duration).to.equal(30);
+    expect(oosai.settings_candle_duration).to.equal(5);
   });
 
   it('should correctly update canldes', function () {
     var oosai = new OOSAI(settings);
     var candle = oosai.candleRangeSummary(candles, 0, 5);
     expect(candle.high).to.equal(257.19);
-    expect(candle.open).to.equal(256.81);
+    expect(candle.open).to.equal(257.19);
     expect(candle.close).to.equal(257.01);
     expect(candle.trades).to.equal(15);
     expect(candle.size).to.equal(5);
@@ -272,26 +271,9 @@ describe('indicators/OOSAI', function () {
   });
 
   it('should correctly calculate index', function () {
-    settings = {
-      "candle_duration": 5,
-      "buy": {
-        "condition": {
-          "case1": {
-            "prev_candle_count": 3,
-            "prev_volume_surge_ratio": 3,
-            "prev_price_surge_ratio": 1.01
-          },
-          "case2": {
-            "prev_candle_count": 3,
-            "prev_volume_surge_ratio": 5,
-            "prev_max_num_candle": 10
-          }
-        }
-      }
-    }
     var oosai = new OOSAI(settings);
     _.each(candles,function(c) {
-      oosai.update2(c);
+      oosai.update(c);
     })
     // start: start,
     // age_offset: age_offset,
@@ -301,8 +283,8 @@ describe('indicators/OOSAI', function () {
     expect(result.start).to.equal(5);
     expect(result.age_offset).to.equal(20);
     expect(result.end).to.equal(22);
-    oosai.update2(_.last(candles));
-    oosai.update2(_.last(candles));
+    oosai.update(_.last(candles));
+    oosai.update(_.last(candles));
     result = oosai.calcIndex();
     expect(result.size).to.equal(24);
     expect(result.age).to.equal(4);
@@ -310,7 +292,7 @@ describe('indicators/OOSAI', function () {
     expect(result.start).to.equal(5);
     expect(result.end).to.equal(24);
 
-    oosai.update2(_.last(candles));
+    oosai.update(_.last(candles));
     result = oosai.calcIndex();
     expect(result.size).to.equal(25);
     expect(result.age).to.equal(0);
@@ -318,12 +300,81 @@ describe('indicators/OOSAI', function () {
     expect(result.start).to.equal(10);
     expect(result.end).to.equal(25);
 
-    oosai.update2(_.last(candles));
+    oosai.update(_.last(candles));
     result = oosai.calcIndex();
     expect(result.size).to.equal(26);
     expect(result.age).to.equal(1);
     expect(result.age_offset).to.equal(25);
     expect(result.start).to.equal(10);
     expect(result.end).to.equal(26);
+  });
+
+  it('should correctly getCandleSummaryBySize ', function () {
+    var oosai = new OOSAI(settings);
+    _.each(candles,function(c) {
+      oosai.update(c);
+    })
+    let result = oosai.getCandleSummaryBySize(5);
+    expect(Number(result.avgvol.toFixed(2))).to.equal(6.79);
+  });
+
+  it('should correctly getCurrentCandleSummary ', function () {
+    var oosai = new OOSAI(settings);
+    _.each(candles,function(c) {
+      oosai.update(c);
+    })
+    let result = oosai.getCurrentCandleSummary();
+    expect(Number(result.avgvol.toFixed(2))).to.equal(23);
+  });
+
+  it('condition1 should be true when volume of the current candles is greater than previous candles ', function () {
+    var oosai = new OOSAI(settings);
+    _.each(candles,function(c) {
+      oosai.update(c);
+    })
+    let cond1 = oosai.checkBuyCondition1();
+    expect(cond1).to.equal(true);
+
+    _.each(candles,function(c) {
+      oosai.update(c);
+    })
+    let cond2 = oosai.checkBuyCondition1();
+    expect(cond2).to.equal(false);
+  });
+
+  //helper function for condition2 test
+  function makeCandlesForCond2() {
+    var result = [];
+    _.each(_.range(5),function(i) {
+      result = result.concat(_.slice(candles,0,20));
+    })
+    _.each(result,function(c) {
+      if(c.volume > 100) {
+        throw "number exception";
+      }
+    });
+
+    var bigCandle =   {
+      "open": 265.46,
+      "high": 277.48,
+      "low": 257.46,
+      "close": 285.48,
+      "vwp": 257.47333333333336,
+      "volume": 30,
+      "trades": 4
+    }
+    _.each(_.range(4),function(i) {
+      result.push(bigCandle);
+    })
+    return result;
+  }
+  it('condition2 should be true when volume of the current candles is greater than previous candles ', function () {
+    var oosai = new OOSAI(settings);
+    var dummyCandles = makeCandlesForCond2();
+    _.each(dummyCandles,function(c) {
+      oosai.update(c);
+    });
+    let cond2 = oosai.checkBuyCondition2();
+    expect(cond2).to.equal(true);
   });
 });
