@@ -64,7 +64,7 @@ describe('core/candleBatcher', function() {
 
   it('should correctly add two candles together', function() {
     cb = new CandleBatcher(2);
-    var _candles = _.slice(candles,0,2);
+    var _candles = candles.slice(0,2);
     var first = _.first(_candles);
     var second = _.last(_candles);
 

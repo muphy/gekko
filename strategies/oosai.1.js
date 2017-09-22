@@ -13,21 +13,45 @@ var oosai = require('./indicators/OOSAI.js');
 var _ = require('lodash');
 var config = require('../core/util.js').getConfig();
 var settings = config.oosai;
-
-const TEST_ENABLED = false;
 // Let's create our own strat
 var strat = {};
 
 // Prepare everything our method needs
+strat.init = function() {
+  this.currentTrend = 'long';
+  this.requiredHistory = 0;
+}
+
+// What happens on every new candle?
+strat.update = function(candle) {
+
+  // Get a random number between 0 and 1.
+  this.randomNumber = Math.random();
+
+  // There is a 10% chance it is smaller than 0.1
+  this.toUpdate = this.randomNumber < 0.1;
+}
+
+// For debugging purposes.
+strat.log = function() {
+  log.debug('calculated random number:');
+  log.debug('\t', this.randomNumber.toFixed(3));
+}
+
+// Prepare everything our method needs
 strat.init = function () {
-  console.log("init",settings);
   this.addIndicator('oosai', 'OOSAI', settings);
   this.trend = 'none';
+  // this.beforeCandles = [];
+  // this.currentCandles = [];
+  // this.currentPosition = 'short'; //최초는 판 상태,즉 BTC 가 있는 상태로 출발
+  // this.wishProfit = 0.05; // 목표 수익율
+  // this.longPrice = 0;
 }
 
 // What happens on every new candle?
 strat.update = function (candle) {
-  // this.indicators.update(candle);
+  this.indicator.update(candle);
 }
 
 // For debugging purposes.
@@ -40,37 +64,23 @@ strat.log = function () {
 // information, check if we should
 // update or not.
 strat.check = function (candle) {
-  if(this.indicators.oosai.isBoundary()) {
-    return;
-  }
   if(this.trend != 'long') {
-    if(this.indicators.oosai.checkBuyCondition1() || this.indicators.oosai.checkBuyCondition1() ) {
+    if(this.indicator.oosai.checkBuyCondition1() || this.indicator.oosai.checkBuyCondition1() ) {
       this.advice('long');
-      this.lastPrice = candle.close;
       this.trend = 'long';
-      log.debug("long !!!!!!!!!!!!!!!!!!");
+      log.debug("short !!!!!!!!!!!!!!!!!!");
       log.debug('lastPrice',this.lastPrice);
       log.debug('close',candle.close);
     }
   } else {
-    if(this.indicators.oosai.checkSellCondition1(this.lastPrice,candle)) {
+    if(this.indicator.oosai.checkSellCondition1()) {
       this.advice('short');
-      log.debug("short !!!!!!!!!!!!!!!!!!");
+      log.debug("long !!!!!!!!!!!!!!!!!!");
       log.debug('lastPrice',this.lastPrice);
       log.debug('close',candle.close);
-      this.trend = 'short';
-      this.indicators.oosai.reset();
+      this.indicator.oosai.reset();
     }
   }
 }
 
-if(TEST_ENABLED)  {
-  var Consultant = function() {}
-  _.each(strat, function(fn, name) {
-    Consultant.prototype[name] = fn;
-  });
-
-  module.exports = Consultant;
-} else {
-  module.exports = strat;
-}
+module.exports = strat;

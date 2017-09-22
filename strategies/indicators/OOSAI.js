@@ -13,10 +13,10 @@ var Indicator = function (settings) {
 
 Indicator.prototype.reset = function (settings) {
   this.candleHistories = [];
-  this.candleIdx = 0; // 캔들 index
-  this.buyIdx = 0; // 구매한 시점 1분 봉 index
-  this.age_from_completed = 0; // 마지막 30분 완성 이후로 부터의 idx 
-  this.active = false;
+}
+
+Indicator.prototype.isBoundary = function () {
+  return _.size(this.candleHistories) % this.settings_candle_duration === 0;
 }
 
 Indicator.prototype.update = function (candle) {
@@ -95,8 +95,15 @@ Indicator.prototype.checkBuyCondition2 = function () {
   return cond1 && cond2 && cond3;
 }
 
+Indicator.prototype.checkSellCondition1 = function (lastBuyPrice,currentCandle) {
+  if(currentCandle.close > lastBuyPrice * 1.03 ) {
+    return true;
+  }
+  return false;
+}
+
 Indicator.prototype.candleRangeSummary = function (candleHistories, start, end) {
-  var candles = _.slice(candleHistories, start, end);
+  var candles = candleHistories.slice(start, end);
   var size = _.size(candles);
   var result = _.reduce(
     candles,

@@ -69,6 +69,10 @@ var Indicators = {
   CCI: {
     factory: require(indicatorsPath + 'CCI'),
     input: 'candle'
+  },
+  OOSAI: {
+    factory: require(indicatorsPath + 'OOSAI'),
+    input: 'candle'
   }
 };
 
