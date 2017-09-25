@@ -248,14 +248,3 @@ var candles = [{
   }
 ];
 
-describe('indicators/OOSAI', function () {
-
-  var OOSAI = require(STRATEGIES_PATH + 'oosai');
-
-  it('should correctly set up with settings', function () {
-    var oosai = new OOSAI(settings);
-    oosai.init()
-    expect(oosai.oosai).to.equal('none');
-  });
-
-});

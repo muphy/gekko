@@ -13,7 +13,6 @@ var oosai = require('./indicators/OOSAI.js');
 var _ = require('lodash');
 var config = require('../core/util.js').getConfig();
 var settings = config.oosai;
-
 const TEST_ENABLED = false;
 // Let's create our own strat
 var strat = {};
@@ -48,18 +47,23 @@ strat.check = function (candle) {
       this.advice('long');
       this.lastPrice = candle.close;
       this.trend = 'long';
-      log.debug("long !!!!!!!!!!!!!!!!!!");
-      log.debug('lastPrice',this.lastPrice);
-      log.debug('close',candle.close);
+      log.debug("buy:",this.lastPrice);
     }
   } else {
     if(this.indicators.oosai.checkSellCondition1(this.lastPrice,candle)) {
       this.advice('short');
-      log.debug("short !!!!!!!!!!!!!!!!!!");
-      log.debug('lastPrice',this.lastPrice);
-      log.debug('close',candle.close);
+      log.debug("sell1:",this.lastPrice);
       this.trend = 'short';
       this.indicators.oosai.reset();
+      return;
+    }
+
+    if(this.indicators.oosai.checkSellStage1Cond2(this.lastPrice)) {
+      this.advice('short');
+      log.debug("sell2:",this.lastPrice);
+      this.trend = 'short';
+      this.indicators.oosai.reset();
+      return;
     }
   }
 }

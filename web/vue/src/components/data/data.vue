@@ -35,9 +35,9 @@
       template(v-if='!datasets.length')
         p It looks like you don't have any local data yet.
     .my2
-      h2 Import more data
-      p.text You can easily import more market data directly from exchanges using the importer.
-      router-link(to='/data/importer') Go to the importer!
+      h2 데이타 가져오기
+      p.text 특정 거래소로의 특정 기간 동안의 코인 거래 내역을 쉽게 가져올 수 있습니다.
+      router-link(to='/data/importer') 데이타 가져오기 페이지로 
 </template>
 
 <script>

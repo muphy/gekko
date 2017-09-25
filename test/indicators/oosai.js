@@ -23,8 +23,17 @@ var settings = {
         "prev_max_num_candle": 10
       }
     }
+  },
+  "sell": {
+    "condition": {
+      "target_profit": 0.05,
+      "case1": {
+        "rate_ratio_from_low": 0.4
+      }
+    }
   }
 }
+
 
 var candles = [{
     "start": moment("2015-02-14T23:57:00.000Z"),
@@ -254,6 +263,7 @@ describe('indicators/OOSAI', function () {
 
   it('should correctly set up with settings', function () {
     var oosai = new OOSAI(settings);
+    expect(oosai.settings.buy.condition.case1.prev_candle_count).to.equal(3);
     expect(oosai.settings_candle_duration).to.equal(settings.candle_duration);
     expect(oosai.settings_candle_duration).to.equal(5);
   });
@@ -272,7 +282,7 @@ describe('indicators/OOSAI', function () {
 
   it('should correctly calculate index', function () {
     var oosai = new OOSAI(settings);
-    _.each(candles,function(c) {
+    _.each(candles, function (c) {
       oosai.update(c);
     })
     // start: start,
@@ -311,7 +321,7 @@ describe('indicators/OOSAI', function () {
 
   it('should correctly getCandleSummaryBySize ', function () {
     var oosai = new OOSAI(settings);
-    _.each(candles,function(c) {
+    _.each(candles, function (c) {
       oosai.update(c);
     })
     let result = oosai.getCandleSummaryBySize(5);
@@ -320,7 +330,7 @@ describe('indicators/OOSAI', function () {
 
   it('should correctly getCurrentCandleSummary ', function () {
     var oosai = new OOSAI(settings);
-    _.each(candles,function(c) {
+    _.each(candles, function (c) {
       oosai.update(c);
     })
     let result = oosai.getCurrentCandleSummary();
@@ -329,13 +339,13 @@ describe('indicators/OOSAI', function () {
 
   it('condition1 should be true when volume of the current candles is greater than previous candles ', function () {
     var oosai = new OOSAI(settings);
-    _.each(candles,function(c) {
+    _.each(candles, function (c) {
       oosai.update(c);
     })
     let cond1 = oosai.checkBuyCondition1();
     expect(cond1).to.equal(true);
 
-    _.each(candles,function(c) {
+    _.each(candles, function (c) {
       oosai.update(c);
     })
     let cond2 = oosai.checkBuyCondition1();
@@ -345,16 +355,16 @@ describe('indicators/OOSAI', function () {
   //helper function for condition2 test
   function makeCandlesForCond2() {
     var result = [];
-    _.each(_.range(5),function(i) {
-      result = result.concat(candles.slice(0,20));
+    _.each(_.range(5), function (i) {
+      result = result.concat(candles.slice(0, 20));
     })
-    _.each(result,function(c) {
-      if(c.volume > 100) {
+    _.each(result, function (c) {
+      if (c.volume > 100) {
         throw "number exception";
       }
     });
 
-    var bigCandle =   {
+    var bigCandle = {
       "open": 265.46,
       "high": 277.48,
       "low": 257.46,
@@ -363,7 +373,7 @@ describe('indicators/OOSAI', function () {
       "volume": 30,
       "trades": 4
     }
-    _.each(_.range(4),function(i) {
+    _.each(_.range(4), function (i) {
       result.push(bigCandle);
     })
     return result;
@@ -371,7 +381,7 @@ describe('indicators/OOSAI', function () {
   it('condition2 should be true when volume of the current candles is greater than previous candles ', function () {
     var oosai = new OOSAI(settings);
     var dummyCandles = makeCandlesForCond2();
-    _.each(dummyCandles,function(c) {
+    _.each(dummyCandles, function (c) {
       oosai.update(c);
     });
     let cond2 = oosai.checkBuyCondition2();
