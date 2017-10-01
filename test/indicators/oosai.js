@@ -342,13 +342,13 @@ describe('indicators/OOSAI', function () {
     _.each(candles, function (c) {
       oosai.update(c);
     })
-    let cond1 = oosai.checkBuyCondition1();
+    let cond1 = oosai.checkBuyCondition1(_.last(candles));
     expect(cond1).to.equal(true);
 
     _.each(candles, function (c) {
       oosai.update(c);
     })
-    let cond2 = oosai.checkBuyCondition1();
+    let cond2 = oosai.checkBuyCondition1(_.last(candles));
     expect(cond2).to.equal(false);
   });
 
@@ -384,7 +384,7 @@ describe('indicators/OOSAI', function () {
     _.each(dummyCandles, function (c) {
       oosai.update(c);
     });
-    let cond2 = oosai.checkBuyCondition2();
+    let cond2 = oosai.checkBuyCondition2(_.last(dummyCandles));
     expect(cond2).to.equal(true);
   });
 });

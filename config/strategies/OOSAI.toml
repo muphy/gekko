@@ -16,6 +16,19 @@ candle_duration = 30 #단위는 min
 #매도 조건
 [sell]
   [sell.condition]
-    target_profit = 0.05 # 5% 이상이면 바로 매도
+    loss_ratio = 0.02 # 손절가율 2% 미만이면 손절
     [sell.condition.case1]
-      rate_ratio_from_low = 0.4 # 현재가가 저점
+      prev_candle_count = 3  #(이전 {3}개 봉
+      prev_volume_surge_ratio = 3 # 이전 봉들의 평균거래량 * {x} 배
+    [sell.condition.range1]
+      a = 0.1
+      b = 0.2
+      c = 0.5 # 수익율 기준,현재 10% 수익이지만 10%*50% 미만 수익율, 즉 5%미만이면 매도
+    [sell.condition.range2]
+      a = 0.2
+      b = 0.3
+      c = 0.25
+    [sell.condition.range3]
+      a = 0.3
+      b = 10
+      c = 0.15
