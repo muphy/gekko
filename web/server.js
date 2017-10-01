@@ -78,6 +78,10 @@ app
   .use(router.allowedMethods());
 
 server.on('request', app.callback());
+//10 min
+server.setTimeout(120000*10,function(socket) {
+  console.log("timeout occurs!!!");
+});
 server.listen(config.api.port, config.api.host, '::', () => {
   const host = `${config.ui.host}:${config.ui.port}${config.ui.path}`;
 
