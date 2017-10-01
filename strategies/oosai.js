@@ -52,7 +52,8 @@ strat.check = function (candle) {
       this.indicators.oosai.reset();
       console.log('sell',candle.close);
     }
-  }
+  } 
+  this.advice();
 
 }
 
