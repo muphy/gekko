@@ -158,6 +158,7 @@ Indicator.prototype.checkSellCondition1 = function (candle) {
   let prev_candle_count = this.settings.sell.condition.case1.prev_candle_count;
   let before_result2 = this.getCandleSummaryBySize(this.settings_candle_duration * prev_candle_count);
   let current_result2 = this.getCurrentCandleSummary();
+  let prev_volume_surge_ratio = this.settings.sell.condition.case1.prev_volume_surge_ratio;
   let cond2 = before_result2.avgvol * 3 < current_result2.avgvol;
   // if(isDownCandle && cond2) {
   //   return true;
