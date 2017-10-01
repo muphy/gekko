@@ -6,13 +6,28 @@ var _ = require('lodash');
 
 //현재는 gekko 가 최소 1분 이하로는 봉 정보를 보내주지 않는다 따라서 1분마다 봉정보를 수신하여 처리
 var Indicator = function (settings) {
-  this.reset(settings);
+  this.reset();
   this.settings = settings;
   this.settings_candle_duration = settings.candle_duration;
+  this.target_profit = this.settings.sell.condition.target_profit;
+  this.sub_target_profit = this.settings.sell.condition.sub_target_profit;
+  this.variable_target_profit = 
 }
 
-Indicator.prototype.reset = function (settings) {
+Indicator.prototype.reset = function () {
   this.candleHistories = [];
+  this.history = {
+    snapshot: {
+      price: 0,
+      index: 0
+    },
+    stage1: {
+      avgvol: 0,
+      warning1: false,
+      warning2: false
+    }
+  }
+  console.log('reset called');
 }
 
 Indicator.prototype.isBoundary = function () {
@@ -20,8 +35,66 @@ Indicator.prototype.isBoundary = function () {
 }
 
 Indicator.prototype.update = function (candle) {
-  this.currentCandle = candle;
   this.candleHistories.push(candle);
+}
+
+Indicator.prototype.getStage = function () {
+  let last_index = _.size(this.candleHistories) - 1;
+  let t = last_index - this.history.snapshot.index + 1;
+  return Math.trunc(t / this.settings_candle_duration ) + 1;
+}
+
+Indicator.prototype.snapshotLong = function (kase,price) {
+  let prev_result = this.getCandleSummaryBySize(this.settings_candle_duration * 3);
+  this.history.snapshot.price = price;
+  this.history.snapshot.kase = kase;
+  this.history.stage1.avgvol = prev_result.avgvol;
+}
+
+//현재 가격이 이전에 산 가격보다 목표치 이상 높으면 true,(매도)
+Indicator.prototype.checkSellCondition1 = function (price) {
+  
+  if (price > this.history.snapshot.price + this.history.snapshot.price * this.settings.sell.condition.target_profit) {
+    // console.log('temp1',price);
+    // console.log('temp2',this.history.snapshot.price + this.history.snapshot.price * this.settings.sell.condition.target_profit);
+    return true;
+  }
+  return false;
+}
+// TODO: {stage: 0,avgVol: 0 ,buyIndex: 0 }, 구매 받아서 stage 1 로 setting 하면서 이 전 3 개 봉 거래량 저장
+// stage 계산은 buyIndex, currentIndex-buyIndex > 30 보다 크면 stage1 , 60 보다 크면 stage2
+//실시간 거래량이 이전{3}개봉의 평균거래량의 {3}배미만, 1분간 더 감시 후 만족 재평가하여 만족
+/*
+buy 0.01337025
+temp1 0.01332514
+temp2 0.0140387625
+reset called
+*/
+Indicator.prototype.checkSellStage1Cond2 = function () {
+  let currentSummary = this.getCurrentCandleSummary();
+  let rate = this.settings.sell.condition.case1.rate_ratio_from_low;
+  let resistance_price = (currentSummary.high - currentSummary.low) * rate + currentSummary.low;
+  let isDown = this.history.snapshot.price < resistance_price;
+  //다음 캔들 한번 더 감시 후 재평가.
+  if (isDown) {
+    this.history.stage1.warning1 = true;
+  } else {
+    this.history.stage1.warning1 = false;
+  }
+  console.log('checkSellStage1Cond2 resistance_price', resistance_price);
+  console.log('checkSellStage1Cond2 price', currentSummary.close);
+  return isDown;
+}
+
+Indicator.prototype.checkSellStage1Cond3 = function() {
+  let current_result2 = this.getCurrentCandleSummary();
+  let cond = this.history.stage1.avgvol * 3 > current_result2.avgvol;
+  if(cond) {
+    this.history.stage1.warning2 = true;
+  } else {
+    this.history.stage1.warning2 = false;
+  }
+  return cond;
 }
 
 Indicator.prototype.calcIndex = function () {
@@ -53,23 +126,24 @@ Indicator.prototype.getCandleSummaryBySize = function (size) {
 /**
  * 봉이 완료되기 전까지 현재 봉 요약 정보
  */
-Indicator.prototype.getCurrentCandleSummary = function (prev) {
+Indicator.prototype.getCurrentCandleSummary = function () {
   let indexResult = this.calcIndex();
   // console.log('indexResult2',indexResult);
-  let start = indexResult.age_offset;
-  let end = indexResult.age_offset;
-  let prev_index = prev || 0;
-  let result = this.candleRangeSummary(this.candleHistories, indexResult.age_offset, indexResult.end - prev_index);
+  if(indexResult.age_offset == indexResult.end) {
+    indexResult.age_offset -= this.settings_candle_duration;
+  }
+  let result = this.candleRangeSummary(this.candleHistories, indexResult.age_offset, indexResult.end);
   return result;
 }
 
-Indicator.prototype.checkBuyCondition1 = function () {
+Indicator.prototype.checkBuyCondition1 = function (candle) {
   if (_.size(this.candleHistories) <= this.settings_candle_duration * this.settings.buy.condition.case1.prev_candle_count) {
+    // console.log('checkBuyCondition1 false',_.size(this.candleHistories));
     return false;
   }
   //1-1. 30봉 open 가격 < 현재 가격
   let before_result1 = this.getCandleSummaryBySize(this.settings_candle_duration);
-  let cond1 = before_result1.open < this.currentCandle.open;
+  let cond1 = before_result1.open < candle.open;
   //1-2 (이전 {3}개 봉의 평균거래량)x{3} < 현재 실시간 거래량
   let before_result2 = this.getCandleSummaryBySize(this.settings_candle_duration * 3);
   let current_result2 = this.getCurrentCandleSummary();
@@ -80,14 +154,14 @@ Indicator.prototype.checkBuyCondition1 = function () {
   return cond1 && cond2 && cond3;
 }
 
-Indicator.prototype.checkBuyCondition2 = function () {
+Indicator.prototype.checkBuyCondition2 = function (candle) {
   let size = _.size(this.candleHistories);
   if (size <= this.settings_candle_duration * 10) {
     return false;
   }
   //2-1. 30봉 open 가격 < 현재 가격
   let before_result1 = this.getCandleSummaryBySize(this.settings_candle_duration);
-  let cond1 = before_result1.open < this.currentCandle.open;
+  let cond1 = before_result1.open < candle.open;
   //2-2. (이전 {3}개 봉의 평균거래량)x {5배} < 현재 실시간 거래량
   let before_result2 = this.getCandleSummaryBySize(this.settings_candle_duration * 5);
   let current_result2 = this.getCurrentCandleSummary();
@@ -98,26 +172,10 @@ Indicator.prototype.checkBuyCondition2 = function () {
   return cond1 && cond2 && cond3;
 }
 
-Indicator.prototype.checkSellCondition1 = function (lastBuyPrice, currentCandle) {
-  if (currentCandle.close > lastBuyPrice * (1 + this.settings.sell.condition.target_profit)) {
-    return true;
-  }
-  return false;
-}
-// TODO: {stage: 0,avgVol: 0 ,buyIndex: 0 }, 구매 받아서 stage 1 로 setting 하면서 이 전 3 개 봉 거래량 저장
-// stage 계산은 buyIndex, currentIndex-buyIndex > 30 보다 크면 stage1 , 60 보다 크면 stage2
-//실시간 거래량이 이전{3}개봉의 평균거래량의 {3}배미만, 1분간 더 감시 후 만족 재평가하여 만족
-Indicator.prototype.checkSellStage1Cond2 = function (buyPrice) {
-  let currentSummary = this.getCurrentCandleSummary();
-  let rate = this.settings.sell.condition.case1.rate_ratio_from_low;
-  let temp = (currentSummary.high - currentSummary.low)*rate + currentSummary.low;
-  let result = buyPrice < temp;
-  console.log('checkSellStage1Cond2 temp',temp);
-  console.log('checkSellStage1Cond2 price',currentSummary.close);
-  return result;
-}
-
 Indicator.prototype.candleRangeSummary = function (candleHistories, start, end) {
+  if(start == end) {
+    throw new Error("start should not equal end");
+  }
   var candles = candleHistories.slice(start, end);
   var size = _.size(candles);
   var result = _.reduce(candles,

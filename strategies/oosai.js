@@ -20,13 +20,12 @@ var strat = {};
 // Prepare everything our method needs
 strat.init = function () {
   console.log("init",settings);
+  this.watch = false;
   this.addIndicator('oosai', 'OOSAI', settings);
-  this.trend = 'none';
 }
 
 // What happens on every new candle?
 strat.update = function (candle) {
-  // this.indicators.update(candle);
 }
 
 // For debugging purposes.
@@ -39,33 +38,22 @@ strat.log = function () {
 // information, check if we should
 // update or not.
 strat.check = function (candle) {
-  if(this.indicators.oosai.isBoundary()) {
-    return;
-  }
-  if(this.trend != 'long') {
-    if(this.indicators.oosai.checkBuyCondition1() || this.indicators.oosai.checkBuyCondition1() ) {
+  if(!this.watch) {
+    if(this.indicators.oosai.checkBuyCondition1(candle) || this.indicators.oosai.checkBuyCondition2(candle)) {
       this.advice('long');
-      this.lastPrice = candle.close;
-      this.trend = 'long';
-      log.debug("buy:",this.lastPrice);
-    }
+      this.watch = true;
+      this.indicators.oosai.snapshotLong('case',candle.close);
+      console.log('buy',candle.close);
+    } 
   } else {
-    if(this.indicators.oosai.checkSellCondition1(this.lastPrice,candle)) {
+    if(this.indicators.oosai.checkSellCondition1(candle.close)) {
       this.advice('short');
-      log.debug("sell1:",this.lastPrice);
-      this.trend = 'short';
+      this.watch = false;
       this.indicators.oosai.reset();
-      return;
-    }
-
-    if(this.indicators.oosai.checkSellStage1Cond2(this.lastPrice)) {
-      this.advice('short');
-      log.debug("sell2:",this.lastPrice);
-      this.trend = 'short';
-      this.indicators.oosai.reset();
-      return;
+      console.log('sell',candle.close);
     }
   }
+
 }
 
 if(TEST_ENABLED)  {

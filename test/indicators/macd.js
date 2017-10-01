@@ -88,7 +88,7 @@ describe('indicators/PPO', function() {
   });
 });
 
-xdescribe('indicators/DEMA', function() {
+describe('indicators/DEMA', function() {
 
   var DEMA = require(INDICATOR_PATH + 'DEMA');
 

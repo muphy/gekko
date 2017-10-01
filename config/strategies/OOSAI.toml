@@ -13,8 +13,9 @@ candle_duration = 30 #단위는 min
       prev_volume_surge_ratio2 = 5 # 이전 봉들의 평균거래량 * {x} 배
       prev_max_num_candle = 10 #2-3. 이전 {10}개봉의 최고가격
 
+#매도 조건
 [sell]
   [sell.condition]
-    target_profit = 0.05
+    target_profit = 0.05 # 5% 이상이면 바로 매도
     [sell.condition.case1]
-      rate_ratio_from_low = 0.4
+      rate_ratio_from_low = 0.4 # 현재가가 저점
