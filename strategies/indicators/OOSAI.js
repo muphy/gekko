@@ -177,14 +177,14 @@ Indicator.prototype.checkBuyCondition2 = function (candle) {
 }
 
 //현재 가격이 이전에 산 가격보다 목표치 이상 높으면 true,(매도)
-Indicator.prototype.checkSellCondition1 = function (price) {
-  let currentPrice = price; //현재 가격
+Indicator.prototype.checkSellCondition1 = function (candle) {
+  let currentPrice = candle.close; //현재 가격
   let buyPrice = this.history.snapshot.price; //이전에 산 가격
   //2번봉 저점, 즉 바로 전 30분 봉의 저점 보다 현재가가 낮으면 매도
-  if (price < this.history.snapshot.prev_candle1_low ) {
+  if (currentPrice < this.history.snapshot.prev_candle1_low ) {
     return true;
   }
-  if(price < buyPrice - buyPrice * this.settings.sell.condition.loss_ratio) {
+  if(currentPrice < buyPrice - buyPrice * this.settings.sell.condition.loss_ratio) {
     return true;
   }
   if(currentPrice > buyPrice + buyPrice * this.settings.sell.condition.range1.a) {

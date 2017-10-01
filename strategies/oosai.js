@@ -46,7 +46,7 @@ strat.check = function (candle) {
       console.log('buy',candle.close);
     } 
   } else {
-    if(this.indicators.oosai.checkSellCondition1(candle.close)) {
+    if(this.indicators.oosai.checkSellCondition1(candle)) {
       this.advice('short');
       this.watch = false;
       this.indicators.oosai.reset();
