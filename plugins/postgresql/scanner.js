@@ -8,7 +8,7 @@ const dirs = util.dirs();
 var postgresUtil = require('./util');
 
 var connectionString = config.postgresql.connectionString;
-
+console.log('connectionString',connectionString);
 
 module.exports = done => {
   var scanClient = new pg.Client(connectionString+"/postgres");

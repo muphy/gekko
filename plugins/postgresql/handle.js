@@ -28,7 +28,6 @@ var plugins = require(util.dirs().gekko + 'plugins');
 var version = adapter.version;
 
 var dbName = postgresUtil.database();
-
 var mode = util.gekkoMode();
 
 var connectionString = config.postgresql.connectionString+"/postgres";

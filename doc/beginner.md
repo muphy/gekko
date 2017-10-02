@@ -7,3 +7,9 @@
 1. http://174.138.41.140:3000/
 2. ssh root@174.138.41.140 !@qq0*******
 
+#### sqlite to postgres
+1. web/vue/UIConfig.js 수정
+2. config.js
+   - config.adpater 수정
+
+
