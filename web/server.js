@@ -79,7 +79,7 @@ app
 
 server.on('request', app.callback());
 //10 min
-server.setTimeout(120000*10,function(socket) {
+server.setTimeout(120000*15,function(socket) {
   console.log("timeout occurs!!!");
 });
 server.listen(config.api.port, config.api.host, '::', () => {
