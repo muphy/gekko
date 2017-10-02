@@ -53,8 +53,7 @@ strat.check = function (candle) {
       console.log('sell',candle.close);
     }
   } 
-  this.advice();
-
+  console.log('check',candle.volume);
 }
 
 if(TEST_ENABLED)  {
