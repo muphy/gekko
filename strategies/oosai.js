@@ -19,14 +19,13 @@ var strat = {};
 
 // Prepare everything our method needs
 strat.init = function () {
-  console.log("init",settings);
+  console.log("init", settings);
   this.watch = false;
   this.addIndicator('oosai', 'OOSAI', settings);
 }
 
 // What happens on every new candle?
-strat.update = function (candle) {
-}
+strat.update = function (candle) {}
 
 // For debugging purposes.
 strat.log = function () {
@@ -38,27 +37,32 @@ strat.log = function () {
 // information, check if we should
 // update or not.
 strat.check = function (candle) {
-  if(!this.watch) {
-    if(this.indicators.oosai.checkBuyCondition1(candle) || this.indicators.oosai.checkBuyCondition2(candle)) {
+  if (!this.watch) {
+    let cond1 = this.indicators.oosai.checkBuyCondition1(candle);
+    let cond2 = this.indicators.oosai.checkBuyCondition2(candle);
+    console.log('check buy', `${this.watch},${cond1},${cond2}` );
+    if (cond1 || cond2) {
       this.advice('long');
       this.watch = true;
-      this.indicators.oosai.snapshotLong('case',candle.close);
-      console.log('buy',candle.close);
-    } 
+      this.indicators.oosai.snapshotLong('case', candle.close);
+      console.log('buy', candle.close);
+    }
   } else {
-    if(this.indicators.oosai.checkSellCondition1(candle)) {
+    let cond3 = this.indicators.oosai.checkSellCondition1(candle);
+    console.log('check sell', `${this.watch},${cond3}` );
+    if (cond3) {
       this.advice('short');
       this.watch = false;
       this.indicators.oosai.reset();
-      console.log('sell',candle.close);
-    }
-  } 
-  console.log('check',candle.volume);
+      console.log('sell', candle.close);
+    } 
+  }
+  // console.log('check', `${this.watch}` );
 }
 
-if(TEST_ENABLED)  {
-  var Consultant = function() {}
-  _.each(strat, function(fn, name) {
+if (TEST_ENABLED) {
+  var Consultant = function () {}
+  _.each(strat, function (fn, name) {
     Consultant.prototype[name] = fn;
   });
 
