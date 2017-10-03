@@ -40,7 +40,7 @@ strat.check = function (candle) {
   if (!this.watch) {
     let cond1 = this.indicators.oosai.checkBuyCondition1(candle);
     let cond2 = this.indicators.oosai.checkBuyCondition2(candle);
-    // console.log('check buy', `${this.watch},${cond1},${cond2}` );
+    console.log('check buy', `${this.watch},${cond1},${cond2}` );
     if (cond1 || cond2) {
       this.advice('long');
       this.watch = true;
@@ -49,7 +49,7 @@ strat.check = function (candle) {
     }
   } else {
     let cond3 = this.indicators.oosai.checkSellCondition1(candle);
-    // console.log('check sell', `${this.watch},${cond3}` );
+    console.log('check sell', `${this.watch},${cond3}` );
     if (cond3) {
       this.advice('short');
       this.watch = false;
