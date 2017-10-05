@@ -92,8 +92,13 @@ Indicator.prototype.getCurrentCandleSummary = function () {
 Indicator.prototype.checkBuyCondition1 = function (candle) {
   let cond0 = _.size(this.candleHistories) > this.settings_candle_duration * this.settings.buy.condition.case1.prev_candle_count;
   if(!cond0) return false;
+  
   //양봉일 때만, 음봉이면 false
-  let isUpCandle = candle.open < candle.close;
+  let up_candle = this.settings.buy.condition.case1.up_candle;
+  let isUpCandle = candle.close > candle.open;
+  if(!up_candle) {
+    isUpCandle = candle.close < candle.open;
+  } 
   
   //1-1. 30봉 open 가격 < 현재 가격
   let before_result1 = this.getCandleSummaryBySize(this.settings_candle_duration);
@@ -119,10 +124,14 @@ Indicator.prototype.checkBuyCondition2 = function (candle) {
   let cond0 = _.size(this.candleHistories) > this.settings_candle_duration * prev_max_num_candle;
   if(!cond0) return false;
   //양봉일 때만, 음봉이면 false
-  let isUpCandle = candle.open < candle.close;
+  let up_candle = this.settings.buy.condition.case2.up_candle;
+  let isUpCandle = candle.close > candle.open;
+  if(!up_candle) {
+    isUpCandle = candle.close < candle.open;
+  } 
   //2-1. 30봉 open 가격 < 현재 가격
   let before_result1 = this.getCandleSummaryBySize(this.settings_candle_duration);
-  let cond1 = before_result1.open < candle.open;
+  
   //2-2. (이전 {3}개 봉의 평균거래량)x {5배} < 현재 실시간 거래량
   let prev_volume_surge_ratio2 = this.settings.buy.condition.case2.prev_volume_surge_ratio2;
   let before_result2 = this.getCandleSummaryBySize(this.settings_candle_duration * prev_volume_surge_ratio2);
