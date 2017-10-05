@@ -8,6 +8,8 @@ var _ = require('lodash');
 var util = require('../../core/util');
 var dirs = util.dirs();
 var INDICATOR_PATH = dirs.indicators;
+
+var OOSAI = require('../../strategies/indicators/OOSAI');
 var settings = {
   "candle_duration": 5,
   "buy": {
@@ -15,20 +17,36 @@ var settings = {
       "case1": {
         "prev_candle_count": 3,
         "prev_volume_surge_ratio": 3,
-        "prev_price_surge_ratio": 1.01
+        "prev_price_surge_ratio": 0.001
       },
       "case2": {
         "prev_candle_count": 3,
-        "prev_volume_surge_ratio": 5,
+        "prev_volume_surge_ratio2": 5,
         "prev_max_num_candle": 10
       }
     }
   },
   "sell": {
     "condition": {
-      "target_profit": 0.05,
+      "loss_ratio": 0.02,
       "case1": {
-        "rate_ratio_from_low": 0.4
+        "prev_candle_count": 3,
+        "prev_volume_surge_ratio": 3
+      },
+      "range1": {
+        "a": 0.03,
+        "b": 0.05,
+        "c": 0.09
+      },
+      "range2": {
+        "a": 0.05,
+        "b": 0.2,
+        "c": 0.25
+      },
+      "range3": {
+        "a": 0.2,
+        "b": 10,
+        "c": 0.15
       }
     }
   }
@@ -249,7 +267,7 @@ var candles = [{
     "start": moment("2015-02-15T00:06:00.000Z"),
     "open": 260.46,
     "high": 277.48,
-    "low": 257.46,
+    "low": 267.46,
     "close": 265.48,
     "vwp": 257.47333333333336,
     "volume": 17,
@@ -259,7 +277,7 @@ var candles = [{
 
 describe('indicators/OOSAI', function () {
 
-  var OOSAI = require(INDICATOR_PATH + 'OOSAI');
+  // var OOSAI = require(INDICATOR_PATH + 'OOSAI');
 
   it('should correctly set up with settings', function () {
     var oosai = new OOSAI(settings);
@@ -345,11 +363,6 @@ describe('indicators/OOSAI', function () {
     let cond1 = oosai.checkBuyCondition1(_.last(candles));
     expect(cond1).to.equal(true);
 
-    _.each(candles, function (c) {
-      oosai.update(c);
-    })
-    let cond2 = oosai.checkBuyCondition1(_.last(candles));
-    expect(cond2).to.equal(false);
   });
 
   //helper function for condition2 test

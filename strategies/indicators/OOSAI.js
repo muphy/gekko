@@ -82,25 +82,21 @@ Indicator.prototype.getCandleSummaryBySize = function (size) {
 Indicator.prototype.getCurrentCandleSummary = function () {
   let indexResult = this.calcIndex();
   // console.log('indexResult2',indexResult);
-  if (indexResult.age_offset == indexResult.end) {
-    indexResult.age_offset -= this.settings_candle_duration;
-  }
+  // if (indexResult.age_offset == indexResult.end) {
+  //   indexResult.age_offset -= this.settings_candle_duration;
+  // }
   let result = this.candleRangeSummary(this.candleHistories, indexResult.age_offset, indexResult.end);
   return result;
 }
 
 Indicator.prototype.checkBuyCondition1 = function (candle) {
-  if (_.size(this.candleHistories) <= this.settings_candle_duration * this.settings.buy.condition.case1.prev_candle_count) {
-    // console.log('checkBuyCondition1 false',_.size(this.candleHistories));
-    return false;
-  }
+  let cond0 = _.size(this.candleHistories) > this.settings_candle_duration * this.settings.buy.condition.case1.prev_candle_count;
+  if(!cond0) return false;
   //양봉일 때만, 음봉이면 false
-  if(candle.open > candle.close) {
-    return false;
-  }
+  let isUpCandle = candle.open < candle.close;
+  
   //1-1. 30봉 open 가격 < 현재 가격
   let before_result1 = this.getCandleSummaryBySize(this.settings_candle_duration);
-  let cond1 = before_result1.open < candle.open;
   //1-2 (이전 {3}개 봉의 평균거래량)x{3} < 현재 실시간 거래량
   let prev_candle_count = this.settings.buy.condition.case1.prev_candle_count;
   let before_result2 = this.getCandleSummaryBySize(this.settings_candle_duration * prev_candle_count);
@@ -110,35 +106,38 @@ Indicator.prototype.checkBuyCondition1 = function (candle) {
   //1-3. 이전 {3}개봉의 평균가격(각 봉의(open+close)/2의 평균)보다 {1%}이상 상승)
   const prev_price_surge_ratio = this.settings.buy.condition.case1.prev_price_surge_ratio;
   let cond3 = before_result2.avgoc < current_result2.avgoc + current_result2.avgoc * prev_price_surge_ratio;
-  let result = cond1 && cond2 && cond3;
+  let result = isUpCandle && cond2 && cond3;
   if (result) {
     this.history.snapshot.prev_candle1_low = before_result1.low;
   }
+  console.log(`buy1: ${cond0},${isUpCandle},${cond2},${cond3}`);
   return result;
 }
 
 Indicator.prototype.checkBuyCondition2 = function (candle) {
-  let size = _.size(this.candleHistories);
   let prev_max_num_candle = this.settings.buy.condition.case2.prev_max_num_candle;
-  if (size <= this.settings_candle_duration * prev_max_num_candle) {
-    return false;
-  }
+  let cond0 = _.size(this.candleHistories) > this.settings_candle_duration * prev_max_num_candle;
+  if(!cond0) return false;
   //양봉일 때만, 음봉이면 false
-  if(candle.open > candle.close) {
-    return false;
-  }
+  let isUpCandle = candle.open < candle.close;
   //2-1. 30봉 open 가격 < 현재 가격
   let before_result1 = this.getCandleSummaryBySize(this.settings_candle_duration);
   let cond1 = before_result1.open < candle.open;
   //2-2. (이전 {3}개 봉의 평균거래량)x {5배} < 현재 실시간 거래량
   let prev_volume_surge_ratio2 = this.settings.buy.condition.case2.prev_volume_surge_ratio2;
-  let before_result2 = this.getCandleSummaryBySize(this.settings_candle_duration * prev_volume_surge_ratio2 );
+  let before_result2 = this.getCandleSummaryBySize(this.settings_candle_duration * prev_volume_surge_ratio2);
   let current_result2 = this.getCurrentCandleSummary();
   let cond2 = before_result2.avgvol * 5 < current_result2.avgvol;
   //2-3. 이전 {10}개봉의 최고가격 < 현재가
   let before_result3 = this.getCandleSummaryBySize(this.settings_candle_duration * prev_max_num_candle);
   let cond3 = before_result3.high < current_result2.close;
-  return cond1 && cond2 && cond3;
+  console.log(`buy2: ${cond0},${isUpCandle},${cond2},${cond3}`);
+  let result = isUpCandle && cond2 && cond3;
+  if (result) {
+    this.history.snapshot.prev_candle1_low = before_result1.low;
+  }
+  console.log(`buy2: ${isUpCandle},${cond2},${cond3}`);
+  return result;
 }
 
 //현재 가격이 이전에 산 가격보다 목표치 이상 높으면 true,(매도)
@@ -146,11 +145,15 @@ Indicator.prototype.checkSellCondition1 = function (candle) {
   let currentPrice = candle.close; //현재 가격
   let buyPrice = this.history.snapshot.price; //이전에 산 가격
   //2번봉 저점, 즉 바로 전 30분 봉의 저점 보다 현재가가 낮으면 매도
-  if (currentPrice < this.history.snapshot.prev_candle1_low ) {
+  let cond0 = currentPrice < this.history.snapshot.prev_candle1_low;
+  console.log('cond0',cond0);
+  if (cond0) {
     return true;
   }
   //-2% 손실 시 손절
-  if(currentPrice < buyPrice - buyPrice * this.settings.sell.condition.loss_ratio) {
+  let cond1 = currentPrice < buyPrice - buyPrice * this.settings.sell.condition.loss_ratio;
+  console.log('cond1',cond1);
+  if (cond1) {
     return true;
   }
   //음봉이면서 거래량이 3배이상
@@ -163,32 +166,35 @@ Indicator.prototype.checkSellCondition1 = function (candle) {
   // if(isDownCandle && cond2) {
   //   return true;
   // }
-  if(currentPrice > buyPrice + buyPrice * this.settings.sell.condition.range1.a) {
-    if(currentPrice < buyPrice + buyPrice * this.settings.sell.condition.range1.b) {
-      let minProfit = this.settings.sell.condition.range1.a * this.settings.sell.condition.range1.c; 
-      if(currentPrice < buyPrice + buyPrice * minProfit) {
+  console.log('sell!',`${currentPrice},${buyPrice}`)
+  if (currentPrice > buyPrice + buyPrice * this.settings.sell.condition.range1.a) {
+    if (currentPrice < buyPrice + buyPrice * this.settings.sell.condition.range1.b) {
+      let minProfit = this.settings.sell.condition.range1.a * this.settings.sell.condition.range1.c;
+      if (currentPrice < buyPrice + buyPrice * minProfit) {
         return true;
       }
-    } else if(currentPrice < buyPrice + buyPrice * this.settings.sell.condition.range2.b) {
-      let minProfit = this.settings.sell.condition.range2.a * this.settings.sell.condition.range2.c; 
-      if(currentPrice < buyPrice + buyPrice * minProfit) {
+    } else if (currentPrice < buyPrice + buyPrice * this.settings.sell.condition.range2.b) {
+      let minProfit = this.settings.sell.condition.range2.a * this.settings.sell.condition.range2.c;
+      if (currentPrice < buyPrice + buyPrice * minProfit) {
         return true;
       }
-    } else if(currentPrice < buyPrice + buyPrice * this.settings.sell.condition.range3.b) {
-      let minProfit = this.settings.sell.condition.range3.a * this.settings.sell.condition.range3.c; 
-      if(currentPrice < buyPrice + buyPrice * minProfit) {
+    } else if (currentPrice < buyPrice + buyPrice * this.settings.sell.condition.range3.b) {
+      let minProfit = this.settings.sell.condition.range3.a * this.settings.sell.condition.range3.c;
+      if (currentPrice < buyPrice + buyPrice * minProfit) {
         return true;
       }
     }
-  }
+  } 
   return false;
 }
 
 Indicator.prototype.candleRangeSummary = function (candleHistories, start, end) {
   if (start == end) {
-    throw new Error("start should not equal end");
+    // throw new Error(`start should not equal end:${start},${end}`);
+    start = end-30;
   }
   var candles = candleHistories.slice(start, end);
+  console.log('candles!!!',_.size(candles),start,end);
   var size = _.size(candles);
   var result = _.reduce(candles,
     function (candle, m) {
