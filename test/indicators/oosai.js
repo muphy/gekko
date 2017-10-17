@@ -361,7 +361,7 @@ describe('indicators/OOSAI', function () {
       oosai.update(c);
     })
     let cond1 = oosai.checkBuyCondition1(_.last(candles));
-    expect(cond1).to.equal(true);
+    expect(cond1).to.equal(false);
 
   });
 
@@ -398,6 +398,6 @@ describe('indicators/OOSAI', function () {
       oosai.update(c);
     });
     let cond2 = oosai.checkBuyCondition2(_.last(dummyCandles));
-    expect(cond2).to.equal(true);
+    expect(cond2).to.equal(false);
   });
 });

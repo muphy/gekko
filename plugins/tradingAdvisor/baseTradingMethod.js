@@ -73,6 +73,10 @@ var Indicators = {
   OOSAI: {
     factory: require(indicatorsPath + 'OOSAI'),
     input: 'candle'
+  },
+  LOOSAI: {
+    factory: require(indicatorsPath + 'LOOSAI'),
+    input: 'candle'
   }
 };
 
