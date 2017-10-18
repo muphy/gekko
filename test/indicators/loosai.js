@@ -112,14 +112,16 @@ describe('indicators/LOOSAI', function () {
     expect(summary.low).equal(888);
     expect(summary.high).equal(1008);
     expect(summary.close).equal(1007);
-
+    loosai.record();
     expect(loosai.canApplyToCase1()).equal(false);
 
     _.each(_.range(3), function () {
       _.each(tc, function (c) {
         loosai.addCandle(c);
+        loosai.record();
       });
     })
+    
     expect(loosai.canApplyToCase1()).equal(true);
   });
 
@@ -138,6 +140,7 @@ describe('indicators/LOOSAI', function () {
     _.each(_.range(3), function () {
       _.each(tcandle, function (c) {
         loosai.addCandle(c);
+        loosai.record();
       });
     });
     //15개짜리 만들고 살 수 있는지 확인.
@@ -151,6 +154,7 @@ describe('indicators/LOOSAI', function () {
     };
     //하나를 더 더하고 살 수 있는지 확인
     loosai.addCandle(c);
+    loosai.record();
     expect(loosai.canApplyToCase1()).equal(true);
     //양봉인지 확인 . 살 수 있는 조건 마련
     expect(loosai.isUpCandle(c)).equal(true);
@@ -488,7 +492,7 @@ describe('indicators/LOOSAI', function () {
     expect(minProfit).equal(0.005);
     expect(loosai.buy.close + loosai.buy.close * minProfit).equal(1010.025);
     expect(loosai.matchSellCase()).equal(false);
-    expect(loosai.sell.case).equal('1');
+    expect(loosai.sell.flow).equal('1');
     loosai.record();
 
     //minProfit 미만으로 떨어지면 case1 손절 조건 , 1050.225 미만
@@ -555,7 +559,7 @@ describe('indicators/LOOSAI', function () {
     expect(minProfit).equal(0.16);
     expect(loosai.buy.close + loosai.buy.close * minProfit).equal(1165.8);
     expect(loosai.matchSellCase()).equal(false);
-    expect(loosai.sell.case).equal('3');
+    expect(loosai.sell.flow).equal('3');
     loosai.record();
 
     //1165.8 미만으로 1분봉이 들어오면 손절

@@ -7,7 +7,8 @@ var Indicator = function (settings) {
   this.groupCandles = []; //candle_duration 동안의 요약정보를 저장
   this.buy = {};
   this.sell = {
-    case: '0'
+    flow: '0',
+    profit : 0
   }
   this.canBuy = true;
 }
@@ -18,10 +19,10 @@ Indicator.prototype.addCandle = function (c) {
   this.candlesIndex++;
   this.candles.push(c);
 }
-Indicator.prototype.update = function(candle) {}
+Indicator.prototype.update = function (candle) {}
 Indicator.prototype.canApplyToCase1 = function () {
-  let minimumCandleSize = this.settings.buy.condition.case1.prev_candle_count * this.settings.candle_duration;
-  return _.size(this.candles) > minimumCandleSize;
+  let prev_candle_count = this.settings.buy.condition.case1.prev_candle_count;
+  return this.candles.length > 0 && this.groupCandles.length >= prev_candle_count;
 }
 Indicator.prototype.isUpCandle = function (c) {
   return c.open <= c.close;
@@ -110,8 +111,11 @@ Indicator.prototype.snapshotBuy = function () {
 }
 //판매 후 호출할 함수
 Indicator.prototype.snapshotSell = function () {
-  this.sell.case = '0';
   this.resetCandles();
+  this.sell = {
+    flow: '0',
+    profit : 0
+  }
   this.canBuy = true;
 }
 Indicator.prototype.resetCandles = function () {
@@ -126,45 +130,58 @@ Indicator.prototype.matchSellCase = function () {
     return false;
   }
   let currentCandle = _.last(this.candles);
-  //매수 시점 이 후로 30분봉 완성 후 감시
-  if (this.groupCandles.length > 0 && this.buy.low > currentCandle.close) {
-    console.log(`case1: 현재 봉 low 보다 매수가격이 아래여서 손절,손절가: ${this.buy.close}`);
-    return true;
-  }
-  //샀던 가격이 현재 가격보다 -2% 미만이면 손절
-  let cond2 = this.buy.close * this.settings.sell.condition.loss_ratio > currentCandle.close;
-  if (cond2) {
-    console.log(`case2: 손실 -2% 미만이라 손절,손절가: ${this.buy.close}`);
-    return true;
-  }
   let currentPrice = currentCandle.close;
   let buyPrice = this.buy.close;
-  if (this.sell.case == '0' && currentPrice > buyPrice * this.settings.sell.condition.range1.a) {
-    if (currentPrice <= buyPrice * this.settings.sell.condition.range2.a) {
-      this.sell.case = '1';
-    } else if (currentPrice <= buyPrice * this.settings.sell.condition.range3.a) {
-      this.sell.case = '2';
+  if (this.sell.profit == 0 && buyPrice > currentPrice) { //손절해야하나?
+    //case1 매수 시점 이 후로 30분봉 완성 후 감시
+    if (this.groupCandles.length > 0 && this.buy.low > currentCandle.close) {
+      console.log(`case1: 현재 봉 low 보다 매수가격이 아래여서 손절,손절가!: ${currentCandle.close}`);
+      return true;
+    }
+    //case 2
+    if (this.buy.close * this.settings.sell.condition.loss_ratio > currentCandle.close) {
+      console.log(`case2: 손실 -2% 미만이라 손절,손절가!: ${currentCandle.close}`);
+      return true;
+    }
+  } else { //익절해야하나.
+    if(this.sell.profit == 0) {
+      if (currentPrice > buyPrice * this.settings.sell.condition.range1.a) {
+        if (currentPrice <= buyPrice * this.settings.sell.condition.range2.a) {
+          this.sell.flow = '1';
+        } else if (currentPrice <= buyPrice * this.settings.sell.condition.range3.a) {
+          this.sell.flow = '2';
+        } else {
+          this.sell.flow = '3';
+        }
+        this.sell.profit = currentPrice;
+        return false;
+      } 
     } else {
-      this.sell.case = '3';
-    }
-    return false;
+      if (this.sell.flow == '1') {
+        let minProfit = (this.settings.sell.condition.range1.a - 1) * (1 - this.settings.sell.condition.range1.b);
+        if (currentPrice < this.sell.profit + this.sell.profit * minProfit) {
+          let profit = (currentPrice-this.buy.close)/this.buy.close;
+          console.log(`case3-1: 익절: ${profit}`);
+          return true;
+        }
+      } else if (this.sell.flow == '2') {
+        let minProfit = (this.settings.sell.condition.range2.a - 1) * (1 - this.settings.sell.condition.range2.b);
+        if (currentPrice < this.sell.profit + this.sell.profit * minProfit) {
+          let profit = (currentPrice-this.buy.close)/this.buy.close;
+          console.log(`case3-2: 익절: ${profit}`);
+          return true;
+        }
+      } else {
+        let minProfit = (this.settings.sell.condition.range3.a - 1) * (1 - this.settings.sell.condition.range3.b);
+        if (currentPrice < this.sell.profit + this.sell.profit * minProfit) {
+          let profit = (currentPrice-this.buy.close)/this.buy.close;
+          console.log(`case3-3: 익절: ${profit}`);
+          return true;
+        }
+      }
+    } 
   }
-  if (this.sell.case == '1') {
-    let minProfit = (this.settings.sell.condition.range1.a - 1) * (1 - this.settings.sell.condition.range1.b);
-    if (currentPrice < buyPrice + buyPrice * minProfit) {
-      return true;
-    }
-  } else if (this.sell.case == '2') {
-    let minProfit = (this.settings.sell.condition.range2.a - 1) * (1 - this.settings.sell.condition.range2.b);
-    if (currentPrice < buyPrice + buyPrice * minProfit) {
-      return true;
-    }
-  } else if (this.sell.case == '3') {
-    let minProfit = (this.settings.sell.condition.range3.a - 1) * (1 - this.settings.sell.condition.range3.b);
-    if (currentPrice < buyPrice + buyPrice * minProfit) {
-      return true;
-    }
-  }
+
   return false;
 }
 
