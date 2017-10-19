@@ -14,35 +14,44 @@ var settings = {
   "buy": {
     "condition": {
       "case1": {
+        "use": true,
         "prev_candle_count": 3,
         "prev_volume_surge_ratio": 3,
         "prev_price_surge_ratio": 1.001
       },
       "case2": {
+        "use": true,
         "prev_candle_count": 3,
-        "prev_volume_surge_ratio": 2,
+        "prev_volume_surge_ratio2": 2,
         "prev_max_num_candle": 10
       }
     }
   },
   "sell": {
     "condition": {
-      "loss_ratio": 0.98,
       "case1": {
-        "prev_candle_count": 3,
-        "prev_volume_surge_ratio": 3
+        "use": true,
+        "min_base_vol": 10,
+        "prev_candle_count": 1
       },
-      "range1": {
-        "a": 1.05,
-        "b": 0.9,
+      "case2": {
+        "use": true,
+        "loss_ratio": 0.98
       },
-      "range2": {
-        "a": 1.1,
-        "b": 0.3
-      },
-      "range3": {
-        "a": 1.2,
-        "b": 0.2
+      "case3": {
+        "use": true,
+        "range1": {
+          "a": 1.05,
+          "b": 0.9
+        },
+        "range2": {
+          "a": 1.1,
+          "b": 0.3
+        },
+        "range3": {
+          "a": 1.2,
+          "b": 0.2
+        }
       }
     }
   }
@@ -347,6 +356,10 @@ describe('indicators/LOOSAI', function () {
     loosai.addCandle(f);
     expect(loosai.matchBuyCase1()).equal(true);
     loosai.record();
+    //use config test
+    loosai.settings.buy.condition.case1.use = false;
+    expect(loosai.matchBuyCase1()).equal(false);
+    loosai.settings.buy.condition.case1.use = true;
 
   });
 
@@ -453,6 +466,7 @@ describe('indicators/LOOSAI', function () {
     };
     //30분 봉 완성
     loosai.addCandle(c);
+    expect(loosai.buy.low).equal(1002);
     expect(loosai.matchSellCase()).equal(false);
     loosai.record();
 
@@ -484,11 +498,11 @@ describe('indicators/LOOSAI', function () {
     };
     loosai.addCandle(c);
     //현재 1분봉이 case 1 인지 확인
-    // expect(loosai.buy.close * loosai.settings.sell.condition.range1.a).equal(1055.25);
-    expect(c.close > loosai.buy.close * loosai.settings.sell.condition.range1.a).equal(true);
-    // expect(loosai.buy.close * loosai.settings.sell.condition.range2.a).equal(1105.5);
-    expect(c.close < loosai.buy.close * loosai.settings.sell.condition.range2.a).equal(true);
-    let minProfit = fixedFloat((loosai.settings.sell.condition.range1.a - 1) * (1 - loosai.settings.sell.condition.range1.b));
+    // expect(loosai.buy.close * loosai.settings.sell.condition.case3.range1.a).equal(1055.25);
+    expect(c.close > loosai.buy.close * loosai.settings.sell.condition.case3.range1.a).equal(true);
+    // expect(loosai.buy.close * loosai.settings.sell.condition.case3.range2.a).equal(1105.5);
+    expect(c.close < loosai.buy.close * loosai.settings.sell.condition.case3.range2.a).equal(true);
+    let minProfit = fixedFloat((loosai.settings.sell.condition.case3.range1.a - 1) * (1 - loosai.settings.sell.condition.case3.range1.b));
     expect(minProfit).equal(0.005);
     expect(loosai.buy.close + loosai.buy.close * minProfit).equal(1010.025);
     expect(loosai.matchSellCase()).equal(false);
@@ -519,11 +533,11 @@ describe('indicators/LOOSAI', function () {
     };
     loosai.addCandle(e);
     //현재 1분봉이 case 1 인지 확인
-    // expect(loosai.buy.close * loosai.settings.sell.condition.range1.a).equal(1055.25);
-    expect(e.close > loosai.buy.close * loosai.settings.sell.condition.range2.a).equal(true);
-    // expect(loosai.buy.close * loosai.settings.sell.condition.range2.a).equal(1105.5);
-    expect(e.close < loosai.buy.close * loosai.settings.sell.condition.range3.a).equal(true);
-    minProfit = fixedFloat((loosai.settings.sell.condition.range2.a - 1) * (1 - loosai.settings.sell.condition.range2.b));
+    // expect(loosai.buy.close * loosai.settings.sell.condition.case3.range1.a).equal(1055.25);
+    expect(e.close > loosai.buy.close * loosai.settings.sell.condition.case3.range2.a).equal(true);
+    // expect(loosai.buy.close * loosai.settings.sell.condition.case3.range2.a).equal(1105.5);
+    expect(e.close < loosai.buy.close * loosai.settings.sell.condition.case3.range3.a).equal(true);
+    minProfit = fixedFloat((loosai.settings.sell.condition.case3.range2.a - 1) * (1 - loosai.settings.sell.condition.case3.range2.b));
     expect(minProfit).equal(0.07);
     expect(loosai.buy.close + loosai.buy.close * minProfit).equal(1075.35);
     expect(loosai.matchSellCase()).equal(false);
@@ -553,9 +567,9 @@ describe('indicators/LOOSAI', function () {
     };
     loosai.addCandle(g);
     //현재 1분봉이 case 1 인지 확인
-    expect(loosai.buy.close * loosai.settings.sell.condition.range3.a).equal(1206);
-    expect(g.close > loosai.buy.close * loosai.settings.sell.condition.range3.a).equal(true);
-    minProfit = fixedFloat((loosai.settings.sell.condition.range3.a - 1) * (1 - loosai.settings.sell.condition.range3.b));
+    expect(loosai.buy.close * loosai.settings.sell.condition.case3.range3.a).equal(1206);
+    expect(g.close > loosai.buy.close * loosai.settings.sell.condition.case3.range3.a).equal(true);
+    minProfit = fixedFloat((loosai.settings.sell.condition.case3.range3.a - 1) * (1 - loosai.settings.sell.condition.case3.range3.b));
     expect(minProfit).equal(0.16);
     expect(loosai.buy.close + loosai.buy.close * minProfit).equal(1165.8);
     expect(loosai.matchSellCase()).equal(false);

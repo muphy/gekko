@@ -40,11 +40,9 @@ strat.log = function () {
 strat.check = function (c) {
   this.loosai.addCandle(c);
   if(this.loosai.canBuy) {
-    if(this.loosai.canApplyToCase1()) {
-      if(this.loosai.matchBuyCase1() || this.loosai.matchBuyCase2()) {
-        this.loosai.snapshotBuy();
-        this.advice('long');
-      }
+    if(this.loosai.matchBuyCase1() || this.loosai.matchBuyCase2()) {
+      this.loosai.snapshotBuy();
+      this.advice('long');
     }
   } else {
     if(this.loosai.matchSellCase()) {

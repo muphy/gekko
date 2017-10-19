@@ -59,6 +59,9 @@ Indicator.prototype.record = function () {
 //2) A = {30}분봉 기준
 //3) B = {3}개 봉의 평균 거래량, C = {3}배 이상 4) D = {1.001}배 상승
 Indicator.prototype.matchBuyCase1 = function () {
+  let use = this.settings.buy.condition.case1.use;
+  if(!use)
+    return false;
   // 30 분이 세 개 이상이고, 현재 candle unit 이 한 개 이상이어야 가능
   let capacity = this.settings.buy.condition.case1.prev_candle_count;
   if (this.groupCandles.length < capacity) return false;
@@ -84,6 +87,9 @@ Indicator.prototype.matchBuyCase1 = function () {
 // 3) B = {3}개 봉의 평균 거래량, C = {2}배 이상
 // 4) E = {10}개의 봉 중에 최고 가격과 비교하여 고점 돌파 여부를 찾음.
 Indicator.prototype.matchBuyCase2 = function () {
+  let use = this.settings.buy.condition.case2.use;
+  if(!use)
+    return false;
   // 30 분이 세 개 이상이고, 현재 candle unit 이 한 개 이상이어야 가능
   let capacity = this.settings.buy.condition.case2.prev_max_num_candle;
   if (this.groupCandles.length < capacity) return false;
@@ -96,7 +102,7 @@ Indicator.prototype.matchBuyCase2 = function () {
   //현재 봉 기준 이전 세 개 요약
   let unitSummary = getCandleSummary(this.candles);
   //거래량 2배 확인 groupcandles 를 통해서
-  const prev_volume_surge_ratio = this.settings.buy.condition.case2.prev_volume_surge_ratio;
+  const prev_volume_surge_ratio = this.settings.buy.condition.case2.prev_volume_surge_ratio2;
   let isVolumeUp = unitSummary.avgvol > groupSummary.avgvol * prev_volume_surge_ratio;
   //이전 10개 봉 최고점 이상
   let isPriceUp = unitSummary.close > groupSummary.high;
@@ -105,12 +111,15 @@ Indicator.prototype.matchBuyCase2 = function () {
 //구매 후 호출할 함수
 Indicator.prototype.snapshotBuy = function () {
   this.buy = _.last(this.candles);
+  console.log(`buy ${this.buy.close}, ${this.buy.low}`);
   //reset candles;
   this.resetCandles();
   this.canBuy = false;
 }
 //판매 후 호출할 함수
 Indicator.prototype.snapshotSell = function () {
+  let c = _.last(this.candles);
+  console.log(`sell ${c.close}, ${c.low}`);
   this.resetCandles();
   this.sell = {
     flow: '0',
@@ -133,22 +142,28 @@ Indicator.prototype.matchSellCase = function () {
   let currentPrice = currentCandle.close;
   let buyPrice = this.buy.close;
   if (this.sell.profit == 0 && buyPrice > currentPrice) { //손절해야하나?
+    let useCase1 = this.settings.sell.condition.case1.use;
+    let useCase2 = this.settings.sell.condition.case2.use;
     //case1 매수 시점 이 후로 30분봉 완성 후 감시
-    if (this.groupCandles.length > 0 && this.buy.low > currentCandle.close) {
-      console.log(`case1: 현재 봉 low 보다 매수가격이 아래여서 손절,손절가!: ${currentCandle.close}`);
+    let current_btc_volume = currentCandle.volume * currentCandle.close;
+    let isGreaterThanMinVol = current_btc_volume > this.settings.sell.condition.case1.min_base_vol;
+    if (useCase1 && isGreaterThanMinVol && this.groupCandles.length > 0 && this.buy.low > currentCandle.close) {
+      console.log(`case1: 현재 봉 low 보다 매수가격이 아래여서 손절,손절가!:  ${currentPrice}, ${this.buy.low}, ${current_btc_volume}, ${this.settings.sell.condition.case1.min_base_vol}`);
       return true;
     }
     //case 2
-    if (this.buy.close * this.settings.sell.condition.loss_ratio > currentCandle.close) {
+    if (useCase2 && this.buy.close * this.settings.sell.condition.case2.loss_ratio > currentCandle.close) {
       console.log(`case2: 손실 -2% 미만이라 손절,손절가!: ${currentCandle.close}`);
       return true;
     }
   } else { //익절해야하나.
+    let useCase3 = this.settings.sell.condition.case3.use;
+    if(!useCase3) return false;
     if(this.sell.profit == 0) {
-      if (currentPrice > buyPrice * this.settings.sell.condition.range1.a) {
-        if (currentPrice <= buyPrice * this.settings.sell.condition.range2.a) {
+      if (currentPrice > buyPrice * this.settings.sell.condition.case3.range1.a) {
+        if (currentPrice <= buyPrice * this.settings.sell.condition.case3.range2.a) {
           this.sell.flow = '1';
-        } else if (currentPrice <= buyPrice * this.settings.sell.condition.range3.a) {
+        } else if (currentPrice <= buyPrice * this.settings.sell.condition.case3.range3.a) {
           this.sell.flow = '2';
         } else {
           this.sell.flow = '3';
@@ -158,21 +173,21 @@ Indicator.prototype.matchSellCase = function () {
       } 
     } else {
       if (this.sell.flow == '1') {
-        let minProfit = (this.settings.sell.condition.range1.a - 1) * (1 - this.settings.sell.condition.range1.b);
+        let minProfit = (this.settings.sell.condition.case3.range1.a - 1) * (1 - this.settings.sell.condition.case3.range1.b);
         if (currentPrice < this.sell.profit + this.sell.profit * minProfit) {
           let profit = (currentPrice-this.buy.close)/this.buy.close;
           console.log(`case3-1: 익절: ${profit}`);
           return true;
         }
       } else if (this.sell.flow == '2') {
-        let minProfit = (this.settings.sell.condition.range2.a - 1) * (1 - this.settings.sell.condition.range2.b);
+        let minProfit = (this.settings.sell.condition.case3.range2.a - 1) * (1 - this.settings.sell.condition.case3.range2.b);
         if (currentPrice < this.sell.profit + this.sell.profit * minProfit) {
           let profit = (currentPrice-this.buy.close)/this.buy.close;
           console.log(`case3-2: 익절: ${profit}`);
           return true;
         }
       } else {
-        let minProfit = (this.settings.sell.condition.range3.a - 1) * (1 - this.settings.sell.condition.range3.b);
+        let minProfit = (this.settings.sell.condition.case3.range3.a - 1) * (1 - this.settings.sell.condition.case3.range3.b);
         if (currentPrice < this.sell.profit + this.sell.profit * minProfit) {
           let profit = (currentPrice-this.buy.close)/this.buy.close;
           console.log(`case3-3: 익절: ${profit}`);
