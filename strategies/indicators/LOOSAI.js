@@ -68,6 +68,11 @@ Indicator.prototype.matchBuyCase1 = function () {
   //양봉 확인
   let c = _.last(this.candles);
   let isUpCandle = this.isUpCandle(c);
+
+  //최소 btc 이상 거래량
+  let current_btc_volume = c.volume * c.close;
+  let isGreaterThanMinVol = current_btc_volume > this.settings.buy.condition.case1.min_base_vol;
+
   //3 은 이 전 30분 봉 세 개
   //30분봉 기준 이전 세 개 요약
   let groupSummary = this.getCandleGroupSummary(3);
@@ -79,7 +84,7 @@ Indicator.prototype.matchBuyCase1 = function () {
   //1.01 % 이상
   const prev_price_surge_ratio = this.settings.buy.condition.case1.prev_price_surge_ratio;
   let isPriceUp = unitSummary.close * prev_price_surge_ratio > groupSummary.avgoc;
-  return isUpCandle && isVolumeUp && isPriceUp;
+  return isUpCandle && isGreaterThanMinVol && isVolumeUp && isPriceUp;
 }
 
 // 1) {양봉}
@@ -145,10 +150,8 @@ Indicator.prototype.matchSellCase = function () {
     let useCase1 = this.settings.sell.condition.case1.use;
     let useCase2 = this.settings.sell.condition.case2.use;
     //case1 매수 시점 이 후로 30분봉 완성 후 감시
-    let current_btc_volume = currentCandle.volume * currentCandle.close;
-    let isGreaterThanMinVol = current_btc_volume > this.settings.sell.condition.case1.min_base_vol;
-    if (useCase1 && isGreaterThanMinVol && this.groupCandles.length > 0 && this.buy.low > currentCandle.close) {
-      console.log(`case1: 현재 봉 low 보다 매수가격이 아래여서 손절,손절가!:  ${currentPrice}, ${this.buy.low}, ${current_btc_volume}, ${this.settings.sell.condition.case1.min_base_vol}`);
+    if (useCase1 && this.groupCandles.length > 0 && this.buy.low > currentCandle.close) {
+      console.log(`case1: 현재 봉 low 보다 매수가격이 아래여서 손절,손절가!:  ${currentPrice}, ${this.buy.low}`);
       return true;
     }
     //case 2

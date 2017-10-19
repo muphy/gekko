@@ -17,6 +17,7 @@ var settings = {
         "use": true,
         "prev_candle_count": 3,
         "prev_volume_surge_ratio": 3,
+        "min_base_vol": 15,
         "prev_price_surge_ratio": 1.001
       },
       "case2": {
@@ -31,7 +32,6 @@ var settings = {
     "condition": {
       "case1": {
         "use": true,
-        "min_base_vol": 10,
         "prev_candle_count": 1
       },
       "case2": {
