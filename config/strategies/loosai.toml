@@ -20,7 +20,7 @@ candle_duration = 30 #단위는 min
   [sell.condition]
     [sell.condition.case1]
       use = true
-      min_base_vol = 10 # 볼륨 이상일 때만 확인. 단위 btc
+      min_base_vol = 30 # 볼륨 이상일 때만 확인. 단위 btc
       prev_candle_count = 1  #최소 30분 완료 이 후 진행 1은 30분봉 한 개
     [sell.condition.case2]
       use = true
