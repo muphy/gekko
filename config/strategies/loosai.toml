@@ -21,12 +21,15 @@ candle_duration = 30 #단위는 min
   [sell.condition]
     [sell.condition.case1]
       use = true
-      prev_candle_count = 1  #최소 30분 완료 이 후 진행 1은 30분봉 한 개
+      nth_candle = 0  #{K} 0번봉(현재봉, 매수시점의 봉) 저점 미만시 매도
+      min_base_vol = 30 #최소 거래량
     [sell.condition.case2]
       use = true
       loss_ratio = 0.98 # 손절가율 2% 미만이면 손절
+      min_base_vol = 30 #최소 거래량
     [sell.condition.case3]
       use = true
+      min_base_vol = 30 #최소 거래량
       [sell.condition.case3.range1]
         a = 1.05
         b = 0.9 # 5%이상 수익시 수익률 기준으로 90%하락하면 매도

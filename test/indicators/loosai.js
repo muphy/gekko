@@ -32,14 +32,17 @@ var settings = {
     "condition": {
       "case1": {
         "use": true,
-        "prev_candle_count": 1
+        "nth_candle": 0,
+        "min_base_vol": 30
       },
       "case2": {
         "use": true,
-        "loss_ratio": 0.98
+        "loss_ratio": 0.98,
+        "min_base_vol": 30
       },
       "case3": {
         "use": true,
+        "min_base_vol": 30,
         "range1": {
           "a": 1.05,
           "b": 0.9
