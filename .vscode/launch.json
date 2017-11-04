@@ -1,14 +1,32 @@
 {
   "version": "0.2.0",
-  "configurations": [    {
-    "name": "Run mocha",
-    "type": "node",
-    "request": "launch",
-    "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-    "stopOnEntry": false,
-    "args": ["test/**/*.js", "--recursive","test","-u","tdd","--reporter","spec"],
-    "cwd": "${workspaceRoot}",
-    "runtimeExecutable": null,
-    "env": { "NODE_ENV": "testing"}
-  }]
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach by Process ID",
+      "processId": "${command:PickProcess}"
+    },
+    {
+      "name": "Run mocha",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+      "stopOnEntry": false,
+      "args": ["test/**/*.js", "--recursive", "test", "-u", "tdd", "--reporter", "spec"],
+      "cwd": "${workspaceRoot}",
+      "runtimeExecutable": null,
+      "env": {
+        "NODE_ENV": "testing"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Gekko Server",
+      "program": "${workspaceFolder}/web/server",
+      "cwd": "${workspaceFolder}",
+      "smartStep": true
+    }
+  ]
 }

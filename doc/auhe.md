@@ -1,0 +1,1 @@
+[jwt](https://www.theodo.fr/blog/2016/11/securize-a-koa-api-with-a-jwt-token/)

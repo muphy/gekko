@@ -15,7 +15,7 @@ Indicator.prototype.update = function(price) {
   this.calculateEMAdiff();
   this.signal.update(this.diff);
   this.result = this.diff - this.signal.result;
-  log.debug('MACD indicator update:',this.result);
+  // log.debug('MACD indicator update:',this.result);
 }
 
 Indicator.prototype.calculateEMAdiff = function() {

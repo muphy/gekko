@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import techan from 'techan'
 
 // techanjs based cancle chart, unused at the moment
 
@@ -97,6 +98,7 @@ export default function(_data, _trades) {
         trade.date = new Date(t.date);
         return trade;
     });
+    
 
     console.log(trades);
 

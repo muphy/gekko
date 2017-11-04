@@ -6,7 +6,7 @@
 
 <script>
 
-import chart from '../../../d3/chart4'
+import chart from '../../../d3/chart6'
 import { draw as drawMessage, clear as clearMessage } from '../../../d3/message'
 
 const MIN_CANDLES = 4;
@@ -52,53 +52,189 @@ export default {
 
 <style>
 
-#chartWrapper.clickable {
-  position: relative;
-}
+    text {
+        fill: #000;
+    }
 
-#chartWrapper.clickable .shield {
-  cursor: zoom-in;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: grey;
-  opacity: 0.1;
-}
+    text.symbol {
+        fill: #BBBBBB;
+    }
 
-#chart {
-  background-color: #eee;
-  width: 100%;
-}
+    path {
+        fill: none;
+        stroke-width: 1;
+    }
 
-#chart circle {
-  clip-path: url(#clip);
-}
+    path.candle {
+        stroke: #000000;
+    }
 
-#chart .zoom {
-  cursor: move;
-  fill: none;
-  pointer-events: all;
-}
+    path.candle.body {
+        stroke-width: 0;
+    }
 
-#chart .line {
-  fill: none;
-  stroke: steelblue;
-  stroke-width: 1.5px;
-  clip-path: url(#clip);
-}
+    path.candle.up {
+        fill: #00AA00;
+        stroke: #00AA00;
+    }
 
-/*#chart .price.line {
-  stroke-width: 2.5px;
-}*/
+    path.candle.down {
+        fill: #FF0000;
+        stroke: #FF0000;
+    }
 
-#chart circle.buy {
-  fill: #7FFF00;
-}
+    .close.annotation.up path {
+        fill: #00AA00;
+    }
 
-#chart circle.sell {
-  fill: red;
-}
+    path.volume {
+        fill: #DDDDDD;
+    }
+
+    .indicator-plot path.line {
+        fill: none;
+        stroke-width: 1;
+    }
+
+    .ma-0 path.line {
+        stroke: #1f77b4;
+    }
+
+    .ma-1 path.line {
+        stroke: #aec7e8;
+    }
+
+    .ma-2 path.line {
+        stroke: #ff7f0e;
+    }
+
+    button {
+        position: absolute;
+        right: 110px;
+        top: 25px;
+    }
+
+    path.macd {
+        stroke: #0000AA;
+    }
+
+    path.signal {
+        stroke: #FF9999;
+    }
+
+    path.zero {
+        stroke: #BBBBBB;
+        stroke-dasharray: 0;
+        stroke-opacity: 0.5;
+    }
+
+    path.difference {
+        fill: #BBBBBB;
+        opacity: 0.5;
+    }
+
+    path.rsi {
+        stroke: #000000;
+    }
+
+    path.overbought, path.oversold {
+        stroke: #FF9999;
+        stroke-dasharray: 5, 5;
+    }
+
+    path.middle, path.zero {
+        stroke: #BBBBBB;
+        stroke-dasharray: 5, 5;
+    }
+
+    .analysis path, .analysis circle {
+        stroke: blue;
+        stroke-width: 0.8;
+    }
+
+    .trendline circle {
+        stroke-width: 0;
+        display: none;
+    }
+
+    .mouseover .trendline path {
+        stroke-width: 1.2;
+    }
+
+    .mouseover .trendline circle {
+        stroke-width: 1;
+        display: inline;
+    }
+
+    .dragging .trendline path, .dragging .trendline circle {
+        stroke: darkblue;
+    }
+
+    .interaction path, .interaction circle {
+        pointer-events: all;
+    }
+
+    .interaction .body {
+        cursor: move;
+    }
+
+    .trendlines .interaction .start, .trendlines .interaction .end {
+        cursor: nwse-resize;
+    }
+
+    .supstance path {
+        stroke-dasharray: 2, 2;
+    }
+
+    .supstances .interaction path {
+        pointer-events: all;
+        cursor: ns-resize;
+    }
+
+    .mouseover .supstance path {
+        stroke-width: 1.5;
+    }
+
+    .dragging .supstance path {
+        stroke: darkblue;
+    }
+
+    .crosshair {
+        cursor: crosshair;
+    }
+
+    .crosshair path.wire {
+        stroke: #DDDDDD;
+        stroke-dasharray: 1, 1;
+    }
+
+    .crosshair .axisannotation path {
+        fill: #DDDDDD;
+    }
+
+    .tradearrow path.tradearrow {
+        stroke: none;
+    }
+
+    .tradearrow path.buy {
+        fill: #0000FF;
+    }
+
+    .tradearrow path.sell {
+        fill: #9900FF;
+    }
+
+    .tradearrow path.highlight {
+        fill: none;
+        stroke-width: 2;
+    }
+
+    .tradearrow path.highlight.buy {
+        stroke: #0000FF;
+    }
+
+    .tradearrow path.highlight.sell {
+        stroke: #9900FF;
+    }
 
 </style>
