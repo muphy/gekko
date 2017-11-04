@@ -1,4 +1,4 @@
-connectionString = "postgres://postgres:qq0710@localhost:5432"
+connectionString = "test://tester:qweqwe123!@localhost:5432"
 path = "plugins/postgresql"
 version = 0.1
 
