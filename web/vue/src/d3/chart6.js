@@ -30,6 +30,16 @@ function initDim() {
 }
 
 export default function (_data, _trades) {
+
+
+  _data = _data.map(function (d) {
+
+    d.date = new Date(d.start);
+    return d;
+  });
+
+  console.log(_data);
+
   const dim = initDim();
   var indicatorTop = d3.scaleLinear()
     .range([dim.indicator.top, dim.indicator.bottom]);
@@ -232,10 +242,6 @@ export default function (_data, _trades) {
   svg = svg.append("g")
     .attr("transform", "translate(" + dim.margin.left + "," + dim.margin.top + ")");
 
-  svg.append('text')
-    .attr("class", "symbol")
-    .attr("x", 20)
-    .text("Facebook, Inc. (FB)");
 
   svg.append("g")
     .attr("class", "x axis")
@@ -253,7 +259,7 @@ export default function (_data, _trades) {
     .attr("y", -12)
     .attr("dy", ".71em")
     .style("text-anchor", "end")
-    .text("Price ($)");
+    .text("Price (USDT)");
 
   ohlcSelection.append("g")
     .attr("class", "close annotation up");
@@ -327,91 +333,38 @@ export default function (_data, _trades) {
 
   d3.select("button").on("click", reset);
 
-  d3.csv("./data.csv", function (error, data) {
+  inputData();
+
+  function inputData() {
+
     var accessor = candlestick.accessor(),
       indicatorPreRoll = 33; // Don't show where indicators don't have data
 
-    data = data.map(function (d) {
-      return {
-        date: parseDate(d.Date),
-        open: +d.Open,
-        high: +d.High,
-        low: +d.Low,
-        close: +d.Close,
-        volume: +d.Volume
-      };
-    }).sort(function (a, b) {
+    var data = _data.sort(function (a, b) {
       return d3.ascending(accessor.d(a), accessor.d(b));
     });
+
+    
+    for( var i = 0; i < data.length; i++ )
+      console.log( data[i].close );
 
     x.domain(techan.scale.plot.time(data).domain());
     y.domain(techan.scale.plot.ohlc(data.slice(indicatorPreRoll)).domain());
     yPercent.domain(techan.scale.plot.percent(y, accessor(data[indicatorPreRoll])).domain());
     yVolume.domain(techan.scale.plot.volume(data).domain());
 
-    var trendlineData = [{
-        start: {
-          date: new Date(2014, 2, 11),
-          value: 72.50
-        },
-        end: {
-          date: new Date(2014, 5, 9),
-          value: 63.34
-        }
-      },
-      {
-        start: {
-          date: new Date(2013, 10, 21),
-          value: 43
-        },
-        end: {
-          date: new Date(2014, 2, 17),
-          value: 70.50
-        }
-      }
-    ];
 
-    var supstanceData = [{
-        start: new Date(2014, 2, 11),
-        end: new Date(2014, 5, 9),
-        value: 63.64
-      },
-      {
-        start: new Date(2013, 10, 21),
-        end: new Date(2014, 2, 17),
-        value: 55.50
-      }
-    ];
 
-    var trades = [{
-        date: data[67].date,
-        type: "buy",
-        price: data[67].low,
-        low: data[67].low,
-        high: data[67].high
-      },
-      {
-        date: data[100].date,
-        type: "sell",
-        price: data[100].high,
-        low: data[100].low,
-        high: data[100].high
-      },
-      {
-        date: data[130].date,
-        type: "buy",
-        price: data[130].low,
-        low: data[130].low,
-        high: data[130].high
-      },
-      {
-        date: data[170].date,
-        type: "sell",
-        price: data[170].low,
-        low: data[170].low,
-        high: data[170].high
-      }
-    ];
+
+    var trades = _trades.map(function (d) {
+      return {
+        date: new Date(d.date),
+        type: d.action,
+        price: d.price,
+        low: d.price,
+        high: d.price
+      };
+    });
 
     var macdData = techan.indicator.macd()(data);
     macdScale.domain(techan.scale.plot.macd(macdData).domain());
@@ -430,8 +383,8 @@ export default function (_data, _trades) {
     svg.select("g.crosshair.ohlc").call(ohlcCrosshair).call(zoom);
     svg.select("g.crosshair.macd").call(macdCrosshair).call(zoom);
     svg.select("g.crosshair.rsi").call(rsiCrosshair).call(zoom);
-    svg.select("g.trendlines").datum(trendlineData).call(trendline).call(trendline.drag);
-    svg.select("g.supstances").datum(supstanceData).call(supstance).call(supstance.drag);
+    // svg.select("g.trendlines").datum(trendlineData).call(trendline).call(trendline.drag);
+    // svg.select("g.supstances").datum(supstanceData).call(supstance).call(supstance.drag);
 
     svg.select("g.tradearrow").datum(trades).call(tradearrow);
 
@@ -441,7 +394,8 @@ export default function (_data, _trades) {
     yPercentInit = yPercent.copy();
 
     draw();
-  });
+
+  }
 
   function reset() {
     zoom.scale(1);

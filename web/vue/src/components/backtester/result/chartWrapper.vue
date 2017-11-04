@@ -221,7 +221,7 @@ export default {
     }
 
     .tradearrow path.sell {
-        fill: #9900FF;
+        fill: red;
     }
 
     .tradearrow path.highlight {
@@ -234,7 +234,7 @@ export default {
     }
 
     .tradearrow path.highlight.sell {
-        stroke: #9900FF;
+        stroke: red;
     }
 
 </style>
